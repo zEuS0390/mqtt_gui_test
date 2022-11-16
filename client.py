@@ -16,13 +16,10 @@ class MQTTClient:
             self.client.on_message = self.on_message
         
     def start(self):
-        while True:
-            try:
-                self.client.connect(self.broker, self.port)
-                break
-            except Exception as e:
-                print(f"{e}")
-            time.sleep(0.03)
+        try:
+            self.client.connect(self.broker, self.port)
+        except Exception as e:
+            raise e
         self.client.loop_start()
 
     def stop(self):

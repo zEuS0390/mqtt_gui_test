@@ -5,8 +5,9 @@ from windows.set_preferences import SetPreferencesWindow
 from constants import *
 from client import MQTTClient
 from secrets import token_hex
-import json
+import json, time
 
+from PyQt5.QtCore import QThread, pyqtSignal
 class MainApplication:
 
     def __init__(self):
@@ -31,18 +32,24 @@ class MainApplication:
         self.setPreferencesWindow.back_btn.clicked.connect(self.goBackFromSetPreferencesWindowToOptionsWindow)
 
     def mqttClientConnect(self):
-        self.mqtt_client = MQTTClient(
-            self.connectionWindow.ip_address_input.text(),
-            f"{token_hex(16)}",
-            self.connectionWindow.topic_input.text(),
-            self.connectionWindow.username_input.text(),
-            self.connectionWindow.password_input.text()
-        )
-        self.connectionWindow.ip_address_input.clear()
-        self.connectionWindow.topic_input.clear()
-        self.connectionWindow.username_input.clear()
-        self.connectionWindow.password_input.clear()
-        self.mqtt_client.start()
+        ip_address = self.connectionWindow.ip_address_input.text()
+        topic = self.connectionWindow.topic_input.text()
+        username = self.connectionWindow.username_input.text()
+        password = self.connectionWindow.password_input.text()
+
+        if len(ip_address) > 0 and len(topic) > 0 and len(username) > 0 and len(password) > 0:
+            self.mqtt_client = MQTTClient(ip_address,f"{token_hex(16)}",topic,username,password)
+            self.connectingWorker = Worker(self, self.mqtt_client)
+            self.connectingWorker.isconnected.connect(self.showOptionsWindow)
+            self.connectingWorker.start()
+            self.connectionWindow.ip_address_input.clear()
+            self.connectionWindow.topic_input.clear()
+            self.connectionWindow.username_input.clear()
+            self.connectionWindow.password_input.clear()
+        else:
+            print("Missing inputs")
+
+    def showOptionsWindow(self):
         self.connectionWindow.close()
         self.optionsWindow.show()
 
@@ -78,3 +85,19 @@ class MainApplication:
     def goBackFromSetPreferencesWindowToOptionsWindow(self):
         self.setPreferencesWindow.close()
         self.optionsWindow.show()
+
+class Worker(QThread):
+
+    isconnected = pyqtSignal()
+
+    def __init__(self, mainapp: MainApplication, mqtt_client: MQTTClient, parent=None):
+        super(Worker, self).__init__()
+        self.mqtt_client = mqtt_client
+        self.mainapp = mainapp
+
+    def run(self):
+        try:
+            self.mqtt_client.start()
+            self.isconnected.emit()
+        except Exception as e:
+            print(f"{e}")

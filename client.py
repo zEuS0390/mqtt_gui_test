@@ -14,6 +14,9 @@ class MQTTClient:
         self.client.on_connect = self.on_connect
         if on_message:
             self.client.on_message = self.on_message
+    
+    def __del__(self):
+        print("MQTTClient deleted.")
         
     def start(self):
         try:
@@ -38,6 +41,7 @@ class MQTTClient:
         elif rc == 5:
             self.isauthorized = False
             # Not authorized (incorrect username or password)
+            self.stop()
             pass
 
     def on_message(self, client, userdata, msg):

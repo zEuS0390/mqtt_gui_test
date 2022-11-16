@@ -4,10 +4,13 @@ from PyQt5.QtWidgets import (
     QLineEdit, QLabel, QDesktopWidget
 )
 from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSignal, Qt
 from constants import *
 
 class ConnectionWindow(QWidget):
 
+    pressedEscape = pyqtSignal()
+    pressedEnter = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         super(ConnectionWindow, self).__init__(*args, **kwargs)
@@ -62,5 +65,10 @@ class ConnectionWindow(QWidget):
     def center(self):
         width, height = self.sizeHint().width(), self.sizeHint().height()
         centerPoint = QDesktopWidget().availableGeometry().center()
-        self.move(centerPoint.x() - width // 2, centerPoint.y() - height // 2)
-        # self.move(qtRectangle.topLeft())
+        self.move(centerPoint.x() - width // 2, centerPoint.y() - height // 2) 
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Return:
+            self.pressedEnter.emit()
+        elif event.key() == Qt.Key.Key_Escape:
+            self.pressedEscape.emit()

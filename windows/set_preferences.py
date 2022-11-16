@@ -4,10 +4,12 @@ from PyQt5.QtWidgets import (
     QDesktopWidget, QPushButton
 )
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from constants import *
 
 class SetPreferencesWindow(QWidget):
+
+    pressedBackspace = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         super(SetPreferencesWindow, self).__init__(*args, **kwargs)
@@ -30,7 +32,6 @@ class SetPreferencesWindow(QWidget):
     
     def setupUI(self):
         self.setWindowTitle(WINDOW_TITLE)
-        # self.resize(*WINDOW_SIZE)
 
         self.font = QFont()
         self.font.setPointSize(18)
@@ -317,3 +318,7 @@ class SetPreferencesWindow(QWidget):
         width, height = self.sizeHint().width(), self.sizeHint().height()
         centerPoint = QDesktopWidget().availableGeometry().center()
         self.move(centerPoint.x() - width // 2, centerPoint.y() - height // 2)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Backspace:
+            self.pressedBackspace.emit()

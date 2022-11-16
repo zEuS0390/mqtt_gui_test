@@ -35,6 +35,13 @@ class MainApplication:
         self.changeIntervalWindow.publish_interval_btn.clicked.connect(self.publishInterval)
         self.changeIntervalWindow.back_btn.clicked.connect(self.goBackFromChangeIntervalWindowToOptionsWindow)
 
+        self.connectionWindow.pressedEnter.connect(self.mqttClientConnect)
+        self.connectionWindow.pressedEscape.connect(lambda: self.connectionWindow.close())
+        self.optionsWindow.pressedBackspace.connect(self.disconnectMQTTConnection)
+        self.changeIntervalWindow.pressedBackspace.connect(self.goBackFromChangeIntervalWindowToOptionsWindow)
+        self.publishPlainTXTWindow.pressedBackspace.connect(self.goBackFromPublishPlainTXTWindowToOptionsWindow)
+        self.setPreferencesWindow.pressedBackspace.connect(self.goBackFromSetPreferencesWindowToOptionsWindow)
+
     def mqttClientConnect(self):
         ip_address = self.connectionWindow.ip_address_input.text()
         topic = self.connectionWindow.topic_input.text()
@@ -43,15 +50,18 @@ class MainApplication:
 
         if len(ip_address) > 0 and len(topic) > 0 and len(username) > 0 and len(password) > 0:
             self.mqtt_client = MQTTClient(ip_address,f"{token_hex(16)}",topic,username,password)
-            self.connectingWorker = Worker(self, self.mqtt_client)
-            self.connectingWorker.isconnected.connect(self.showOptionsWindow)
-            self.connectingWorker.start()
-            self.connectionWindow.ip_address_input.clear()
-            self.connectionWindow.topic_input.clear()
-            self.connectionWindow.username_input.clear()
-            self.connectionWindow.password_input.clear()
+            self.connectingThread = ConnectingThread(self, self.mqtt_client)
+            self.connectingThread.isconnected.connect(self.showOptionsWindow)
+            self.connectingThread.clearinputs.connect(self.clearConnectionInputs)
+            self.connectingThread.start()
         else:
             print("Missing inputs")
+
+    def clearConnectionInputs(self):
+        self.connectionWindow.ip_address_input.clear()
+        self.connectionWindow.topic_input.clear()
+        self.connectionWindow.username_input.clear()
+        self.connectionWindow.password_input.clear()
 
     def showOptionsWindow(self):
         self.connectionWindow.close()
@@ -107,18 +117,29 @@ class MainApplication:
     def goBackFromChangeIntervalWindowToOptionsWindow(self):
         self.changeIntervalWindow.close()
         self.optionsWindow.show()
-class Worker(QThread):
+class ConnectingThread(QThread):
 
     isconnected = pyqtSignal()
+    clearinputs = pyqtSignal()
 
     def __init__(self, mainapp: MainApplication, mqtt_client: MQTTClient, parent=None):
-        super(Worker, self).__init__()
+        super(ConnectingThread, self).__init__()
         self.mqtt_client = mqtt_client
         self.mainapp = mainapp
 
     def run(self):
         try:
             self.mqtt_client.start()
-            self.isconnected.emit()
+            n = 0
+            while not self.mqtt_client.isauthorized:
+                n += 1
+                if n >= 5:
+                    break
+                time.sleep(1)
+            if self.mqtt_client.isauthorized:
+                self.clearinputs.emit()
+                self.isconnected.emit()
+            else:
+                print(f"Not authorized.")
         except Exception as e:
             print(f"{e}")

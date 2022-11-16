@@ -5,11 +5,12 @@ from PyQt5.QtWidgets import (
     QDesktopWidget
 )
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from constants import *
 
 class ChangeIntervalWindow(QWidget):
 
+    pressedBackspace = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         super(ChangeIntervalWindow, self).__init__(*args, **kwargs)
@@ -52,3 +53,7 @@ class ChangeIntervalWindow(QWidget):
         width, height = self.sizeHint().width(), self.sizeHint().height()
         centerPoint = QDesktopWidget().availableGeometry().center()
         self.move(centerPoint.x() - width // 2, centerPoint.y() - height // 2)
+
+    def keyPressEvent(self,event):
+        if event.key() == Qt.Key.Key_Backspace:
+            self.pressedBackspace.emit()

@@ -8,13 +8,34 @@ from client import MQTTClient
 from secrets import token_hex
 import json, time
 
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSignal, pyqtSlot, QObject
+from paho.mqtt.client import Client, connack_string
+from secrets import token_hex
+
 class MainApplication:
 
     def __init__(self):
-        self.mqtt_client = None
+        self.mqtt_client = Client(f"{token_hex(16)}")
+        self.host = None
+        self.topic = None
+        self.username = None
+        self.password = None
+        self.isConnected = False
+        self.threadpool = QThreadPool()
+        print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+        self.mqtt_client.on_connect = self.on_connect
+        self.mqtt_client.on_message = self.on_message
         self.setupWindows()
         self.connectionWindow.show()
+
+    def on_connect(self, client, userdata, flags, rc):
+        if rc == 0:
+            self.isConnected = True
+        elif rc == 5:
+            self.isConnected = False
+
+    def on_message(self, client, userdata, msg):
+        print(f"Received message: {msg.payload}")
 
     def setupWindows(self):
         self.connectionWindow = ConnectionWindow()
@@ -42,20 +63,22 @@ class MainApplication:
         self.publishPlainTXTWindow.pressedBackspace.connect(self.goBackFromPublishPlainTXTWindowToOptionsWindow)
         self.setPreferencesWindow.pressedBackspace.connect(self.goBackFromSetPreferencesWindowToOptionsWindow)
 
+    def getConnectionStatus(self):
+        return self.isConnected
+
     def mqttClientConnect(self):
-        ip_address = self.connectionWindow.ip_address_input.text()
-        topic = self.connectionWindow.topic_input.text()
+        self.host = self.connectionWindow.ip_address_input.text()
+        self.topic = self.connectionWindow.topic_input.text()
         username = self.connectionWindow.username_input.text()
         password = self.connectionWindow.password_input.text()
 
-        if len(ip_address) > 0 and len(topic) > 0 and len(username) > 0 and len(password) > 0:
-            self.mqtt_client = MQTTClient(ip_address,f"{token_hex(16)}",topic,username,password)
-            self.connectingThread = ConnectingThread(self, self.mqtt_client)
-            self.connectingThread.isconnected.connect(self.showOptionsWindow)
-            self.connectingThread.clearinputs.connect(self.clearConnectionInputs)
-            self.connectingThread.start()
-        else:
-            print("Missing inputs")
+        if len(self.host) > 0 and len(self.topic) > 0 and len(username) > 0 and len(password) > 0:
+            self.mqtt_client.username_pw_set(username, password)
+            connectWorker = ConnectWorker(self.mqtt_client, self.getConnectionStatus, self.host, 1883)
+            connectWorker.signals.success.connect(self.showOptionsWindow)
+            connectWorker.signals.enableButton.connect(lambda: self.connectionWindow.connect_btn.setDisabled(False))
+            self.threadpool.start(connectWorker)
+            self.connectionWindow.connect_btn.setDisabled(True)
 
     def clearConnectionInputs(self):
         self.connectionWindow.ip_address_input.clear()
@@ -68,10 +91,9 @@ class MainApplication:
         self.optionsWindow.show()
 
     def disconnectMQTTConnection(self):
+        self.isConnected = False
         self.optionsWindow.close()
         self.connectionWindow.show()
-        self.mqtt_client.stop()
-        self.mqtt_client = None
 
     def goBackFromPublishPlainTXTWindowToOptionsWindow(self):
         self.publishPlainTXTWindow.close()
@@ -82,19 +104,17 @@ class MainApplication:
         self.publishPlainTXTWindow.show()
     
     def publishPlainTXT(self):
-        if self.mqtt_client is not None:
-            self.mqtt_client.client.publish(topic=self.mqtt_client.topic, payload=self.publishPlainTXTWindow.plaintext_input.toPlainText())
-            print(f"Payload published to {self.mqtt_client.topic}.")
+        self.mqtt_client.publish(topic=self.topic, payload=self.publishPlainTXTWindow.plaintext_input.toPlainText())
+        print(f"Payload published to {self.topic}.")
 
     def showPreferencesWindow(self):
         self.optionsWindow.close()
         self.setPreferencesWindow.show()
 
     def publishPPEPreferences(self):
-        if self.mqtt_client is not None:
-            payload = json.dumps(self.setPreferencesWindow.ppe_preferences)
-            self.mqtt_client.client.publish(topic=self.mqtt_client.topic, payload=payload)
-            print(f"Payload published to {self.mqtt_client.topic}.")
+        payload = json.dumps(self.setPreferencesWindow.ppe_preferences)
+        self.mqtt_client.publish(topic=self.topic, payload=payload)
+        print(f"Payload published to {self.topic}.")
 
     def goBackFromSetPreferencesWindowToOptionsWindow(self):
         self.setPreferencesWindow.close()
@@ -109,37 +129,52 @@ class MainApplication:
         if interval.isdigit():
             interval = int(interval)
             payload = json.dumps({"detection_interval": interval})
-            self.mqtt_client.client.publish(topic=self.mqtt_client.topic, payload=payload)
-            print(f"Payload published to {self.mqtt_client.topic}.")
+            self.mqtt_client.publish(topic=self.topic, payload=payload)
+            print(f"Payload published to {self.topic}.")
         else:
             print("Invalid input!")
 
     def goBackFromChangeIntervalWindowToOptionsWindow(self):
         self.changeIntervalWindow.close()
         self.optionsWindow.show()
-class ConnectingThread(QThread):
 
-    isconnected = pyqtSignal()
-    clearinputs = pyqtSignal()
+class ConnectSignals(QObject):
+    enableButton = pyqtSignal()
+    success = pyqtSignal()
 
-    def __init__(self, mainapp: MainApplication, mqtt_client: MQTTClient, parent=None):
-        super(ConnectingThread, self).__init__()
+class ConnectWorker(QRunnable):
+
+    def __init__(self, mqtt_client: Client, getConnectionStatus, host: str, port: int):
+        super(ConnectWorker, self).__init__()
         self.mqtt_client = mqtt_client
-        self.mainapp = mainapp
+        self.getConnectionStatus = getConnectionStatus
+        self.host = host
+        self.port = port
+        self.signals = ConnectSignals()
+
+    def __del__(self):
+        print("QRunnable deleted.")
 
     def run(self):
-        try:
-            self.mqtt_client.start()
-            n = 0
-            while not self.mqtt_client.isauthorized:
-                n += 1
-                if n >= 5:
-                    break
-                time.sleep(1)
-            if self.mqtt_client.isauthorized:
-                self.clearinputs.emit()
-                self.isconnected.emit()
-            else:
-                print(f"Not authorized.")
-        except Exception as e:
-            print(f"{e}")
+        while True:
+            try:
+                self.mqtt_client.connect(self.host, self.port)
+                self.mqtt_client.loop_start()
+                times = 0
+                while not self.getConnectionStatus():
+                    if times > 5:
+                        break
+                    times += 1
+                    time.sleep(0.03)
+                if self.getConnectionStatus():
+                    print("Success.")
+                    self.signals.enableButton.emit()
+                    self.signals.success.emit()
+                else:
+                    print("Try again.")
+                    self.mqtt_client.loop_stop()
+                    self.signals.enableButton.emit()
+                break
+            except Exception as e:
+                print(f"{e}")
+            time.sleep(0.03)

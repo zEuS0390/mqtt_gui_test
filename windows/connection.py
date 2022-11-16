@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QGridLayout, 
     QVBoxLayout, QPushButton, 
-    QLineEdit, QLabel
+    QLineEdit, QLabel, QDesktopWidget
 )
 from PyQt5.QtGui import QFont
 from constants import *
@@ -12,10 +12,10 @@ class ConnectionWindow(QWidget):
     def __init__(self, *args, **kwargs):
         super(ConnectionWindow, self).__init__(*args, **kwargs)
         self.setupUI()
+        self.center()
     
     def setupUI(self):
         self.setWindowTitle(WINDOW_TITLE)
-        # self.resize(*WINDOW_SIZE)
 
         self.font = QFont()
         self.font.setPointSize(18)
@@ -58,3 +58,9 @@ class ConnectionWindow(QWidget):
         self.mainlayout.addWidget(self.connect_btn)
 
         self.setLayout(self.mainlayout)
+
+    def center(self):
+        width, height = self.sizeHint().width(), self.sizeHint().height()
+        centerPoint = QDesktopWidget().availableGeometry().center()
+        self.move(centerPoint.x() - width // 2, centerPoint.y() - height // 2)
+        # self.move(qtRectangle.topLeft())

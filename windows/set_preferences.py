@@ -1,10 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, 
-    QPlainTextEdit, QPushButton
-)
-from PyQt5.QtWidgets import (
     QGridLayout, QLabel,
-    QHBoxLayout
+    QDesktopWidget, QPushButton
 )
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
@@ -29,6 +26,7 @@ class SetPreferencesWindow(QWidget):
             "person": True
         }
         self.update()
+        self.center()
     
     def setupUI(self):
         self.setWindowTitle(WINDOW_TITLE)
@@ -314,3 +312,8 @@ class SetPreferencesWindow(QWidget):
         self.checkState("vest", "no_vest", self.enable_vest_btn, self.disable_all_vest_btn, self.enable_no_vest_btn)
         self.checkState("gloves", "no_gloves", self.enable_gloves_btn, self.disable_all_gloves_btn, self.enable_no_gloves_btn)
         self.checkState("boots", "no_boots", self.enable_boots_btn, self.disable_all_boots_btn, self.enable_no_boots_btn)
+
+    def center(self):
+        width, height = self.sizeHint().width(), self.sizeHint().height()
+        centerPoint = QDesktopWidget().availableGeometry().center()
+        self.move(centerPoint.x() - width // 2, centerPoint.y() - height // 2)

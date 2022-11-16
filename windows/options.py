@@ -29,14 +29,17 @@ class OptionsWindow(QWidget):
         # Create widgets
         self.publish_plain_txt_btn = QPushButton("Publish Plain Text")
         self.set_preferences_btn = QPushButton("Set Preferences")
+        self.changee_interval_btn = QPushButton("Change Interval")
         self.disconnect_btn = QPushButton("Disconnect")
 
         self.publish_plain_txt_btn.setFont(self.font)
         self.set_preferences_btn.setFont(self.font)
+        self.changee_interval_btn.setFont(self.font)
         self.disconnect_btn.setFont(self.font)
 
         self.btns_layout.addWidget(self.publish_plain_txt_btn)
         self.btns_layout.addWidget(self.set_preferences_btn)
+        self.btns_layout.addWidget(self.changee_interval_btn)
         self.btns_layout.addWidget(self.disconnect_btn)
 
         self.mainlayout.addLayout(self.btns_layout)

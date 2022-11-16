@@ -2,6 +2,7 @@ from windows.connection import ConnectionWindow
 from windows.options import OptionsWindow
 from windows.publish_plain_txt import PublishPlainTXTWindow
 from windows.set_preferences import SetPreferencesWindow
+from windows.change_interval import ChangeIntervalWindow
 from constants import *
 from client import MQTTClient
 from secrets import token_hex
@@ -20,16 +21,19 @@ class MainApplication:
         self.optionsWindow = OptionsWindow()
         self.publishPlainTXTWindow = PublishPlainTXTWindow()
         self.setPreferencesWindow = SetPreferencesWindow()
+        self.changeIntervalWindow = ChangeIntervalWindow()
 
         self.connectionWindow.connect_btn.clicked.connect(self.mqttClientConnect)
         self.optionsWindow.publish_plain_txt_btn.clicked.connect(self.showPublishPlainTXTWindow)
         self.optionsWindow.set_preferences_btn.clicked.connect(self.showPreferencesWindow)
+        self.optionsWindow.changee_interval_btn.clicked.connect(self.showChangeIntervalWindow)
         self.optionsWindow.disconnect_btn.clicked.connect(self.disconnectMQTTConnection)
         self.publishPlainTXTWindow.publish_btn.clicked.connect(self.publishPlainTXT)
         self.publishPlainTXTWindow.back_btn.clicked.connect(self.goBackFromPublishPlainTXTWindowToOptionsWindow)
-
         self.setPreferencesWindow.publish_preference_btn.clicked.connect(self.publishPPEPreferences)
         self.setPreferencesWindow.back_btn.clicked.connect(self.goBackFromSetPreferencesWindowToOptionsWindow)
+        self.changeIntervalWindow.publish_interval_btn.clicked.connect(self.publishInterval)
+        self.changeIntervalWindow.back_btn.clicked.connect(self.goBackFromChangeIntervalWindowToOptionsWindow)
 
     def mqttClientConnect(self):
         ip_address = self.connectionWindow.ip_address_input.text()
@@ -86,6 +90,23 @@ class MainApplication:
         self.setPreferencesWindow.close()
         self.optionsWindow.show()
 
+    def showChangeIntervalWindow(self):
+        self.optionsWindow.close()
+        self.changeIntervalWindow.show()
+
+    def publishInterval(self):
+        interval = self.changeIntervalWindow.detection_interval_input.text()
+        if interval.isdigit():
+            interval = int(interval)
+            payload = json.dumps({"detection_interval": interval})
+            self.mqtt_client.client.publish(topic=self.mqtt_client.topic, payload=payload)
+            print(f"Payload published to {self.mqtt_client.topic}.")
+        else:
+            print("Invalid input!")
+
+    def goBackFromChangeIntervalWindowToOptionsWindow(self):
+        self.changeIntervalWindow.close()
+        self.optionsWindow.show()
 class Worker(QThread):
 
     isconnected = pyqtSignal()

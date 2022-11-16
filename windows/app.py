@@ -8,6 +8,7 @@ from client import MQTTClient
 from secrets import token_hex
 import json, time
 
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSignal, pyqtSlot, QObject
 from paho.mqtt.client import Client, connack_string
 from secrets import token_hex
@@ -66,6 +67,13 @@ class MainApplication:
     def getConnectionStatus(self):
         return self.isConnected
 
+    def onMessage(self, title, content):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText(content)
+        msg.setWindowTitle(title)
+        msg.exec()
+
     def mqttClientConnect(self):
         self.host = self.connectionWindow.ip_address_input.text()
         self.topic = self.connectionWindow.topic_input.text()
@@ -74,7 +82,8 @@ class MainApplication:
 
         if len(self.host) > 0 and len(self.topic) > 0 and len(username) > 0 and len(password) > 0:
             self.mqtt_client.username_pw_set(username, password)
-            connectWorker = ConnectWorker(self.mqtt_client, self.getConnectionStatus, self.host, 1883)
+            connectWorker = ConnectWorker(self.mqtt_client, self.getConnectionStatus, self.host, self.topic, 1883)
+            connectWorker.signals.message.connect(self.onMessage)
             connectWorker.signals.success.connect(self.showOptionsWindow)
             connectWorker.signals.enableButton.connect(lambda: self.connectionWindow.connect_btn.setDisabled(False))
             self.threadpool.start(connectWorker)
@@ -92,6 +101,7 @@ class MainApplication:
 
     def disconnectMQTTConnection(self):
         self.isConnected = False
+        self.mqtt_client.unsubscribe(self.topic)
         self.optionsWindow.close()
         self.connectionWindow.show()
 
@@ -139,16 +149,18 @@ class MainApplication:
         self.optionsWindow.show()
 
 class ConnectSignals(QObject):
+    message = pyqtSignal(str, str)
     enableButton = pyqtSignal()
     success = pyqtSignal()
 
 class ConnectWorker(QRunnable):
 
-    def __init__(self, mqtt_client: Client, getConnectionStatus, host: str, port: int):
+    def __init__(self, mqtt_client: Client, getConnectionStatus, host: str, topic: str, port: int):
         super(ConnectWorker, self).__init__()
         self.mqtt_client = mqtt_client
         self.getConnectionStatus = getConnectionStatus
         self.host = host
+        self.topic = topic
         self.port = port
         self.signals = ConnectSignals()
 
@@ -156,25 +168,25 @@ class ConnectWorker(QRunnable):
         print("QRunnable deleted.")
 
     def run(self):
-        while True:
-            try:
-                self.mqtt_client.connect(self.host, self.port)
-                self.mqtt_client.loop_start()
-                times = 0
-                while not self.getConnectionStatus():
-                    if times > 5:
-                        break
-                    times += 1
-                    time.sleep(0.03)
-                if self.getConnectionStatus():
-                    print("Success.")
-                    self.signals.enableButton.emit()
-                    self.signals.success.emit()
-                else:
-                    print("Try again.")
-                    self.mqtt_client.loop_stop()
-                    self.signals.enableButton.emit()
-                break
-            except Exception as e:
-                print(f"{e}")
-            time.sleep(0.03)
+        try:
+            self.mqtt_client.connect(self.host, self.port)
+            self.mqtt_client.loop_start()
+            times = 0
+            while not self.getConnectionStatus():
+                if times > 5:
+                    break
+                times += 1
+                time.sleep(1)
+            if self.getConnectionStatus():
+                print("Success.")
+                self.mqtt_client.subscribe(self.topic)
+                self.signals.enableButton.emit()
+                self.signals.success.emit()
+            else:
+                print("Try again.")
+                self.signals.message.emit("Time Out", "Try again.")
+                self.mqtt_client.loop_stop()
+                self.signals.enableButton.emit()
+        except Exception as e:
+            self.signals.message.emit("Error", f"{e}")
+            self.signals.enableButton.emit()

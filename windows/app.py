@@ -11,10 +11,10 @@ import numpy as np
 
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtCore import Qt, QThread, QThreadPool, QRunnable, pyqtSignal, pyqtSlot, QObject
-from paho.mqtt.client import Client, connack_string
+from PyQt5.QtCore import Qt, QThread, QThreadPool, QRunnable, pyqtSignal, QObject
+from paho.mqtt.client import Client
 from secrets import token_hex
-from base64 import b64decode
+import base64
 
 class MainApplication:
 
@@ -41,13 +41,16 @@ class MainApplication:
 
     def on_message(self, client, userdata, msg):
         print(f"Received message: {msg.payload}")
-        data = json.loads(msg.payload.decode())
+        payload = msg.payload.decode()
+        data = json.loads(payload)
 
         if "image" in data:
-            buffer = b64decode(data["image"])
+            encodedImage = data["image"]
+            buffer = base64.b64decode(encodedImage)
             npimg = np.frombuffer(buffer, dtype=np.uint8)
-            img = cv2.imencode(npimg, 1)
-            self.convertFromCVToQT(img)
+            img = cv2.imdecode(npimg, 1)
+            img = cv2.resize(img, (640, 480), interpolation=cv2.INTER_AREA)
+            self.updateView2(img)
 
     def setupWindows(self):
         self.connectionWindow = ConnectionWindow()
@@ -136,6 +139,10 @@ class MainApplication:
     def updateView1(self, cv_image):
         qt_image = self.convertFromCVToQT(cv_image)
         self.monitorWindow.image1.setPixmap(qt_image)
+
+    def updateView2(self, cv_image):
+        qt_image = self.convertFromCVToQT(cv_image)
+        self.monitorWindow.image2.setPixmap(qt_image)
 
     def convertFromCVToQT(self, cv_image):
         rgb_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)

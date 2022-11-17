@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import (
     QWidget, QGridLayout, 
     QVBoxLayout, QPushButton, 
-    QLineEdit, QLabel, QDesktopWidget
+    QLineEdit, QLabel, QDesktopWidget,
+    QCompleter
 )
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSignal, Qt
@@ -61,6 +62,12 @@ class ConnectionWindow(QWidget):
         self.mainlayout.addWidget(self.connect_btn)
 
         self.setLayout(self.mainlayout)
+
+        ip_address_completer = QCompleter([
+            "localhost"
+        ])
+        ip_address_completer.popup().setFont(self.font)
+        self.ip_address_input.setCompleter(ip_address_completer)
 
     def center(self):
         width, height = self.sizeHint().width(), self.sizeHint().height()

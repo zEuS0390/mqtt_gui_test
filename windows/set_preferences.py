@@ -66,48 +66,58 @@ class SetPreferencesWindow(QWidget):
 
         # Helmet Buttons
         self.enable_helmet_btn = QPushButton("YES")
-        self.disable_all_helmet_btn = QPushButton("None")
+        self.disable_all_helmet_btn = QPushButton("NONE")
         self.enable_no_helmet_btn = QPushButton("NO")
+        self.enable_both_helmet_btn = QPushButton("BOTH")
 
         # Glasses Buttons
         self.enable_glasses_btn = QPushButton("YES")
-        self.disable_all_glasses_btn = QPushButton("None")
+        self.disable_all_glasses_btn = QPushButton("NONE")
         self.enable_no_glasses_btn = QPushButton("NO")
+        self.enable_both_glasses_btn = QPushButton("BOTH")
 
         # Vest Buttons
         self.enable_vest_btn = QPushButton("YES")
-        self.disable_all_vest_btn = QPushButton("None")
+        self.disable_all_vest_btn = QPushButton("NONE")
         self.enable_no_vest_btn = QPushButton("NO")
+        self.enable_both_vest_btn = QPushButton("BOTH")
 
         # Gloves Buttons
         self.enable_gloves_btn = QPushButton("YES")
-        self.disable_all_gloves_btn = QPushButton("None")
+        self.disable_all_gloves_btn = QPushButton("NONE")
         self.enable_no_gloves_btn = QPushButton("NO")
+        self.enable_both_gloves_btn = QPushButton("BOTH")
 
         # Boots Buttons
         self.enable_boots_btn = QPushButton("YES")
-        self.disable_all_boots_btn = QPushButton("None")
+        self.disable_all_boots_btn = QPushButton("NONE")
         self.enable_no_boots_btn = QPushButton("NO")
+        self.enable_both_boots_btn = QPushButton("BOTH")
 
         self.enable_helmet_btn.setFont(self.font)
         self.disable_all_helmet_btn.setFont(self.font)
         self.enable_no_helmet_btn.setFont(self.font)
+        self.enable_both_helmet_btn.setFont(self.font)
 
         self.enable_glasses_btn.setFont(self.font)
         self.disable_all_glasses_btn.setFont(self.font)
         self.enable_no_glasses_btn.setFont(self.font)
+        self.enable_both_glasses_btn.setFont(self.font)
 
         self.enable_vest_btn.setFont(self.font)
         self.disable_all_vest_btn.setFont(self.font)
         self.enable_no_vest_btn.setFont(self.font)
+        self.enable_both_vest_btn.setFont(self.font)
 
         self.enable_gloves_btn.setFont(self.font)
         self.disable_all_gloves_btn.setFont(self.font)
         self.enable_no_gloves_btn.setFont(self.font)
+        self.enable_both_gloves_btn.setFont(self.font)
 
         self.enable_boots_btn.setFont(self.font)
         self.disable_all_boots_btn.setFont(self.font)
         self.enable_no_boots_btn.setFont(self.font)
+        self.enable_both_boots_btn.setFont(self.font)
 
         self.publish_preference_btn = QPushButton("Publish")
         self.back_btn = QPushButton("Back")
@@ -118,26 +128,31 @@ class SetPreferencesWindow(QWidget):
         self.helmet_btns_layout.addWidget(self.enable_helmet_btn, 0, 0)
         self.helmet_btns_layout.addWidget(self.disable_all_helmet_btn, 0, 1)
         self.helmet_btns_layout.addWidget(self.enable_no_helmet_btn, 0, 2)
+        self.helmet_btns_layout.addWidget(self.enable_both_helmet_btn, 0, 3)
 
         # Glasses Options Layout
         self.glasses_btns_layout.addWidget(self.enable_glasses_btn, 1, 0)
         self.glasses_btns_layout.addWidget(self.disable_all_glasses_btn, 1, 1)
         self.glasses_btns_layout.addWidget(self.enable_no_glasses_btn, 1, 2)
+        self.glasses_btns_layout.addWidget(self.enable_both_glasses_btn, 1, 3)
 
         # Vest Options Layout
         self.vest_btns_layout.addWidget(self.enable_vest_btn, 2, 0)
         self.vest_btns_layout.addWidget(self.disable_all_vest_btn, 2, 1)
         self.vest_btns_layout.addWidget(self.enable_no_vest_btn, 2, 2)
+        self.vest_btns_layout.addWidget(self.enable_both_vest_btn, 2, 3)
 
         # Gloves Options Layout
         self.gloves_btns_layout.addWidget(self.enable_gloves_btn, 3, 0)
         self.gloves_btns_layout.addWidget(self.disable_all_gloves_btn, 3, 1)
         self.gloves_btns_layout.addWidget(self.enable_no_gloves_btn, 3, 2)
+        self.gloves_btns_layout.addWidget(self.enable_both_gloves_btn, 3, 3)
 
         # Boots Options Layout
         self.boots_btns_layout.addWidget(self.enable_boots_btn, 4, 0)
         self.boots_btns_layout.addWidget(self.disable_all_boots_btn, 4, 1)
         self.boots_btns_layout.addWidget(self.enable_no_boots_btn, 4, 2)
+        self.boots_btns_layout.addWidget(self.enable_both_boots_btn, 4, 3)
 
         self.options_layout.addWidget(self.helmet_label, 0, 0)
         self.options_layout.addLayout(self.helmet_btns_layout, 0, 1)
@@ -169,22 +184,27 @@ class SetPreferencesWindow(QWidget):
         self.enable_helmet_btn.clicked.connect(self.enableHelmet)
         self.disable_all_helmet_btn.clicked.connect(self.disableAllHelmet)
         self.enable_no_helmet_btn.clicked.connect(self.enableNoHelmet)
+        self.enable_both_helmet_btn.clicked.connect(self.enableBothHelmet)
 
         self.enable_glasses_btn.clicked.connect(self.enableGlasses)
         self.disable_all_glasses_btn.clicked.connect(self.disableAllGlasses)
         self.enable_no_glasses_btn.clicked.connect(self.enableNoGlasses)
+        self.enable_both_glasses_btn.clicked.connect(self.enableBothGlasses)
 
         self.enable_vest_btn.clicked.connect(self.enableVest)
         self.disable_all_vest_btn.clicked.connect(self.disableAllVest)
         self.enable_no_vest_btn.clicked.connect(self.enableNoVest)
+        self.enable_both_vest_btn.clicked.connect(self.enableBothVest)
 
         self.enable_gloves_btn.clicked.connect(self.enableGloves)
         self.disable_all_gloves_btn.clicked.connect(self.disableAllGloves)
         self.enable_no_gloves_btn.clicked.connect(self.enableNoGloves)
+        self.enable_both_gloves_btn.clicked.connect(self.enableBothGloves)
 
         self.enable_boots_btn.clicked.connect(self.enableBoots)
         self.disable_all_boots_btn.clicked.connect(self.disableAllBoots)
         self.enable_no_boots_btn.clicked.connect(self.enableNoBoots)
+        self.enable_both_boots_btn.clicked.connect(self.enableBothBoots)
 
 
 
@@ -209,6 +229,13 @@ class SetPreferencesWindow(QWidget):
         self.disable_all_helmet_btn.setStyleSheet("background-color: none;")
         self.enable_no_helmet_btn.setStyleSheet("background-color: green;")
 
+    def enableBothHelmet(self):
+        self.ppe_preferences["helmet"] = True
+        self.ppe_preferences["no_helmet"] = True
+        self.enable_helmet_btn.setStyleSheet("background-color: green;")
+        self.disable_all_helmet_btn.setStyleSheet("background-color: none;")
+        self.enable_no_helmet_btn.setStyleSheet("background-color: green;")
+
     def enableGlasses(self):
         self.ppe_preferences["glasses"] = True
         self.ppe_preferences["no_glasses"] = False
@@ -230,6 +257,13 @@ class SetPreferencesWindow(QWidget):
         self.disable_all_glasses_btn.setStyleSheet("background-color: none;")
         self.enable_no_glasses_btn.setStyleSheet("background-color: green;")
 
+    def enableBothGlasses(self):
+        self.ppe_preferences["glasses"] = True
+        self.ppe_preferences["no_glasses"] = True
+        self.enable_glasses_btn.setStyleSheet("background-color: green;")
+        self.disable_all_glasses_btn.setStyleSheet("background-color: none;")
+        self.enable_no_glasses_btn.setStyleSheet("background-color: green;")
+
     def enableVest(self):
         self.ppe_preferences["vest"] = True
         self.ppe_preferences["no_vest"] = False
@@ -248,6 +282,13 @@ class SetPreferencesWindow(QWidget):
         self.ppe_preferences["vest"] = False
         self.ppe_preferences["no_vest"] = True
         self.enable_vest_btn.setStyleSheet("background-color: none;")
+        self.disable_all_vest_btn.setStyleSheet("background-color: none;")
+        self.enable_no_vest_btn.setStyleSheet("background-color: green;")
+
+    def enableBothVest(self):
+        self.ppe_preferences["vest"] = True
+        self.ppe_preferences["no_vest"] = True
+        self.enable_vest_btn.setStyleSheet("background-color: green;")
         self.disable_all_vest_btn.setStyleSheet("background-color: none;")
         self.enable_no_vest_btn.setStyleSheet("background-color: green;")
     
@@ -272,6 +313,13 @@ class SetPreferencesWindow(QWidget):
         self.disable_all_gloves_btn.setStyleSheet("background-color: none;")
         self.enable_no_gloves_btn.setStyleSheet("background-color: green;")
 
+    def enableBothGloves(self):
+        self.ppe_preferences["gloves"] = True
+        self.ppe_preferences["no_gloves"] = True
+        self.enable_gloves_btn.setStyleSheet("background-color: green;")
+        self.disable_all_gloves_btn.setStyleSheet("background-color: none;")
+        self.enable_no_gloves_btn.setStyleSheet("background-color: green;")
+
     def enableBoots(self):
         self.ppe_preferences["boots"] = True
         self.ppe_preferences["no_boots"] = False
@@ -290,6 +338,13 @@ class SetPreferencesWindow(QWidget):
         self.ppe_preferences["boots"] = False
         self.ppe_preferences["no_boots"] = True
         self.enable_boots_btn.setStyleSheet("background-color: none;")
+        self.disable_all_boots_btn.setStyleSheet("background-color: none;")
+        self.enable_no_boots_btn.setStyleSheet("background-color: green;")
+
+    def enableBothBoots(self):
+        self.ppe_preferences["boots"] = True
+        self.ppe_preferences["no_boots"] = True
+        self.enable_boots_btn.setStyleSheet("background-color: green;")
         self.disable_all_boots_btn.setStyleSheet("background-color: none;")
         self.enable_no_boots_btn.setStyleSheet("background-color: green;")
 

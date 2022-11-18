@@ -169,7 +169,7 @@ class MainApplication:
         self.setPreferencesWindow.show()
 
     def publishPPEPreferences(self):
-        payload = json.dumps(self.setPreferencesWindow.ppe_preferences)
+        payload = json.dumps({"ppe_preferences":self.setPreferencesWindow.ppe_preferences})
         self.mqtt_client.publish(topic=self.topic, payload=payload)
         print(f"Payload published to {self.topic}.")
 
